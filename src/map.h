@@ -1,23 +1,31 @@
 /*
- * map.h
+ *  map.h
  *
  *  Created on: Dec 12, 2016
- *      Author: mufferm
+ *  Author: mufferm
+ *  Modified: Ioannis Tornazakis
  */
 
 #ifndef MAP_H_
 #define MAP_H_
 
 class Map {
+  
 public:
   
-	struct single_landmark_s{
-		int id_i ; // Landmark ID
-		float x_f; // Landmark x-position in the map (global coordinates)
-		float y_f; // Landmark y-position in the map (global coordinates)
+	struct single_landmark_s {
+    // Landmark ID
+    int id_i ;
+    
+    // Landmark x-position in the map (global coordinates)
+		float x_f;
+    
+    // Landmark y-position in the map (global coordinates)
+		float y_f;
 	};
 
-	std::vector<single_landmark_s> landmark_list ; // List of landmarks in the map
+  // List of landmarks in the map
+	std::vector<single_landmark_s> landmark_list ;
 };
 
 #endif /* MAP_H_ */

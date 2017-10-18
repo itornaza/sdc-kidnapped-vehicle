@@ -1,8 +1,10 @@
 /*
  * helper_functions.h
+ *
  * Some helper functions for the 2D particle filter.
  * Created on: Dec 13, 2016
  * Author: Tiffany Huang
+ * Modified: Ioannis Tornazakis
  */
 
 #ifndef HELPER_FUNCTIONS_H_
@@ -14,41 +16,38 @@
 #include <vector>
 #include "map.h"
 
-// for portability of M_PI (Vis Studio, MinGW, etc.)
+// For portability of M_PI (Vis Studio, MinGW, etc.)
 #ifndef M_PI
 const double M_PI = 3.14159265358979323846;
 #endif
 
-/*
+/**
  * Struct representing one position/control measurement.
  */
 struct control_s {
-	
 	double velocity;	// Velocity [m/s]
 	double yawrate;		// Yaw rate [rad/s]
 };
 
-/*
+/**
  * Struct representing one ground truth position.
  */
 struct ground_truth {
-	
 	double x;		// Global vehicle x position [m]
 	double y;		// Global vehicle y position
 	double theta;	// Global vehicle yaw [rad]
 };
 
-/*
+/**
  * Struct representing one landmark observation measurement.
  */
 struct LandmarkObs {
-	
 	int id;		// Id of matching landmark in the map.
 	double x;	// Local (vehicle coordinates) x position of landmark observation [m]
 	double y;	// Local (vehicle coordinates) y position of landmark observation [m]
 };
 
-/*
+/**
  * Computes the Euclidean distance between two 2D points.
  * @param (x1,y1) x and y coordinates of first point
  * @param (x2,y2) x and y coordinates of second point
@@ -71,14 +70,15 @@ inline double * getError(double gt_x, double gt_y, double gt_theta,
 	return error;
 }
 
-/* Reads map data from a file.
+/**
+ * Reads map data from a file.
  * @param filename Name of file containing map data.
  * @output True if opening and reading file was successful
  */
 inline bool read_map_data(std::string filename, Map& map) {
-
 	// Get file of map:
 	std::ifstream in_file_map(filename.c_str(),std::ifstream::in);
+  
 	// Return if we can't open the file.
 	if (!in_file_map) {
 		return false;
@@ -88,8 +88,7 @@ inline bool read_map_data(std::string filename, Map& map) {
 	std::string line_map;
 
 	// Run over each single line:
-	while(getline(in_file_map, line_map)){
-
+	while(getline(in_file_map, line_map)) {
 		std::istringstream iss_map(line_map);
 
 		// Declare landmark values and ID:
@@ -112,17 +111,20 @@ inline bool read_map_data(std::string filename, Map& map) {
 		// Add to landmark list of map:
 		map.landmark_list.push_back(single_landmark_temp);
 	}
+  
 	return true;
 }
 
-/* Reads control data from a file.
+/**
+ * Reads control data from a file.
  * @param filename Name of file containing control measurements.
  * @output True if opening and reading file was successful
  */
-inline bool read_control_data(std::string filename, std::vector<control_s>& position_meas) {
-
+inline bool read_control_data(std::string filename,
+                              std::vector<control_s>& position_meas) {
 	// Get file of position measurements:
 	std::ifstream in_file_pos(filename.c_str(),std::ifstream::in);
+  
 	// Return if we can't open the file.
 	if (!in_file_pos) {
 		return false;
@@ -143,10 +145,8 @@ inline bool read_control_data(std::string filename, std::vector<control_s>& posi
 		control_s meas;
 
 		//read data from line to values:
-
 		iss_pos >> velocity;
 		iss_pos >> yawrate;
-
 		
 		// Set values
 		meas.velocity = velocity;
@@ -155,10 +155,12 @@ inline bool read_control_data(std::string filename, std::vector<control_s>& posi
 		// Add to list of control measurements:
 		position_meas.push_back(meas);
 	}
+  
 	return true;
 }
 
-/* Reads ground truth data from a file.
+/**
+ * Reads ground truth data from a file.
  * @param filename Name of file containing ground truth.
  * @output True if opening and reading file was successful
  */
@@ -166,6 +168,7 @@ inline bool read_gt_data(std::string filename, std::vector<ground_truth>& gt) {
 
 	// Get file of position measurements:
 	std::ifstream in_file_pos(filename.c_str(),std::ifstream::in);
+  
 	// Return if we can't open the file.
 	if (!in_file_pos) {
 		return false;
@@ -176,7 +179,6 @@ inline bool read_gt_data(std::string filename, std::vector<ground_truth>& gt) {
 
 	// Run over each single line:
 	while(getline(in_file_pos, line_pos)){
-
 		std::istringstream iss_pos(line_pos);
 
 		// Declare position values:
@@ -198,16 +200,17 @@ inline bool read_gt_data(std::string filename, std::vector<ground_truth>& gt) {
 		// Add to list of control measurements and ground truth:
 		gt.push_back(single_gt);
 	}
+  
 	return true;
 }
 
-/* Reads landmark observation data from a file.
+/**
+ * Reads landmark observation data from a file.
  * @param filename Name of file containing landmark observation measurements.
  * @output True if opening and reading file was successful
  */
 inline bool read_landmark_data(std::string filename,
                                std::vector<LandmarkObs>& observations) {
-
 	// Get file of landmark measurements:
 	std::ifstream in_file_obs(filename.c_str(),std::ifstream::in);
   
@@ -221,7 +224,6 @@ inline bool read_landmark_data(std::string filename,
 
 	// Run over each single line:
 	while(getline(in_file_obs, line_obs)){
-
 		std::istringstream iss_obs(line_obs);
 
 		// Declare position values:
@@ -241,6 +243,7 @@ inline bool read_landmark_data(std::string filename,
 		// Add to list of control measurements:
 		observations.push_back(meas);
 	}
+  
 	return true;
 }
 
