@@ -1,8 +1,8 @@
 /*
  * helper_functions.h
  * Some helper functions for the 2D particle filter.
- *  Created on: Dec 13, 2016
- *      Author: Tiffany Huang
+ * Created on: Dec 13, 2016
+ * Author: Tiffany Huang
  */
 
 #ifndef HELPER_FUNCTIONS_H_
@@ -43,9 +43,9 @@ struct ground_truth {
  */
 struct LandmarkObs {
 	
-	int id;				// Id of matching landmark in the map.
-	double x;			// Local (vehicle coordinates) x position of landmark observation [m]
-	double y;			// Local (vehicle coordinates) y position of landmark observation [m]
+	int id;		// Id of matching landmark in the map.
+	double x;	// Local (vehicle coordinates) x position of landmark observation [m]
+	double y;	// Local (vehicle coordinates) y position of landmark observation [m]
 };
 
 /*
@@ -58,7 +58,8 @@ inline double dist(double x1, double y1, double x2, double y2) {
 	return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
-inline double * getError(double gt_x, double gt_y, double gt_theta, double pf_x, double pf_y, double pf_theta) {
+inline double * getError(double gt_x, double gt_y, double gt_theta,
+                         double pf_x, double pf_y, double pf_theta) {
 	static double error[3];
 	error[0] = fabs(pf_x - gt_x);
 	error[1] = fabs(pf_y - gt_y);
@@ -131,7 +132,7 @@ inline bool read_control_data(std::string filename, std::vector<control_s>& posi
 	std::string line_pos;
 
 	// Run over each single line:
-	while(getline(in_file_pos, line_pos)){
+	while(getline(in_file_pos, line_pos)) {
 
 		std::istringstream iss_pos(line_pos);
 
@@ -204,10 +205,12 @@ inline bool read_gt_data(std::string filename, std::vector<ground_truth>& gt) {
  * @param filename Name of file containing landmark observation measurements.
  * @output True if opening and reading file was successful
  */
-inline bool read_landmark_data(std::string filename, std::vector<LandmarkObs>& observations) {
+inline bool read_landmark_data(std::string filename,
+                               std::vector<LandmarkObs>& observations) {
 
 	// Get file of landmark measurements:
 	std::ifstream in_file_obs(filename.c_str(),std::ifstream::in);
+  
 	// Return if we can't open the file.
 	if (!in_file_obs) {
 		return false;
