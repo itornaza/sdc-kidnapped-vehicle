@@ -1,9 +1,10 @@
 /*
- * particle_filter.h
+ *  particle_filter.h
  *
  *  2D particle filter class.
  *  Created on: Dec 12, 2016
  *  Author: Tiffany Huang
+ *  Modified: Ioannis Tornazakis
  */
 
 #ifndef PARTICLE_FILTER_H_
@@ -23,7 +24,6 @@ struct Particle {
 };
 
 class ParticleFilter {
-  
 	// Number of particles to draw
 	int num_particles; 
 	
@@ -38,32 +38,34 @@ public:
 	// Set of current particles
 	std::vector<Particle> particles;
 
-	// Constructor
-	// @param num_particles Number of particles
+  /**
+	 * Constructor
+	 * @param num_particles Number of particles
+   */
 	ParticleFilter() : num_particles(0), is_initialized(false) {}
 
-	// Destructor
+  /**
+	 * Destructor
+   */
 	~ParticleFilter() {}
 
 	/**
 	 * init Initializes particle filter by initializing particles to Gaussian
-	 *   distribution around first position and all the weights to 1.
+	 * distribution around first position and all the weights to 1.
 	 * @param x Initial x position [m] (simulated estimate from GPS)
 	 * @param y Initial y position [m]
 	 * @param theta Initial orientation [rad]
 	 * @param std[] Array of dimension 3 [standard deviation of x [m],
-   *                                    standard deviation of y [m]
-   *                                    standard deviation of yaw [rad]]
+   * standard deviation of y [m], standard deviation of yaw [rad]]
 	 */
 	void init(double x, double y, double theta, double std[]);
 
 	/**
-	 * prediction Predicts the state for the next time step
-	 *   using the process model.
+	 * prediction Predicts the state for the next time step using the process
+   * model.
 	 * @param delta_t Time between time step t and t+1 in measurements [s]
 	 * @param std_pos[] Array of dimension 3 [standard deviation of x [m],
-   *                                        standard deviation of y [m]
-	 *                                        standard deviation of yaw [rad]]
+   * standard deviation of y [m], standard deviation of yaw [rad]]
 	 * @param velocity Velocity of car from t to t+1 [m/s]
 	 * @param yaw_rate Yaw rate of car from t to t+1 [rad/s]
 	 */
@@ -84,7 +86,7 @@ public:
    * of the observed measurements.
 	 * @param sensor_range Range [m] of sensor
 	 * @param std_landmark[] Array of dimension 2
-   *                       [Landmark measurement uncertainty [x [m], y [m]]]
+   * [Landmark measurement uncertainty [x [m], y [m]]]
 	 * @param observations Vector of landmark observations
 	 * @param map Map class containing map landmarks
 	 */
@@ -98,7 +100,7 @@ public:
 	 */
 	void resample();
 
-	/*
+	/**
 	 * Set a particles list of associations, along with the associations
    * calculated world x,y coordinates
 	 * This can be a very useful debugging tool to make sure transformations are
