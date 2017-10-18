@@ -25,9 +25,15 @@ using namespace std;
 #define STD_THETA 2
 #define NUM_PARTICLES 100
 #define INIT_WEIGHT 1
+#define E1 0.0001
 
+//----------
 // Globals
+//----------
 const bool DEBUG = true;
+
+// Create a random engine to pick samples
+default_random_engine gen;
 
 /**
  * init Initializes all particles to the first position (based on estimates of
@@ -35,9 +41,6 @@ const bool DEBUG = true;
  * adds random Gaussian noise to each particle
  */
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
-  // Create a random engine to pick samples from
-  default_random_engine gen;
-  
   // Set the filter's number of particles
   num_particles = NUM_PARTICLES;
   
@@ -59,7 +62,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
     
     // Add the particle to the filter's particles vector
     particles.push_back(p);
-  }
+  } // End for
   
   // Update the initialization flag
   is_initialized = true;
@@ -70,15 +73,43 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   
 }
 
+/**
+ * prediction Adds measurements to each particle and add random Gaussian noise
+ *
+ */
 void ParticleFilter::prediction(double delta_t, double std_pos[],
                                 double velocity, double yaw_rate) {
-	// TODO: Add measurements to each particle and add random Gaussian noise.
+  const double dt = delta_t;
+  const double c1 = (yaw_rate) ? (velocity / yaw_rate) : 0.0;
+  const double arc = yaw_rate * dt;
+  const double ds = velocity * dt;
   
-	// NOTE: When adding noise you may find std::normal_distribution and
-  // std::default_random_engine useful.
-	// http://en.cppreference.com/w/cpp/numeric/random/normal_distribution
-	// http://www.cplusplus.com/reference/random/default_random_engine/
-
+  // Create a normal Gaussian distributions for noise in x, y, theta
+  normal_distribution<double> dist_x(0.0, std_pos[STD_X]);
+  normal_distribution<double> dist_y(0.0, std_pos[STD_Y]);
+  normal_distribution<double> dist_theta(0.0, std_pos[STD_THETA]);
+  
+  // Predict the future pose of the particles
+  for (int ix = 0; ix < NUM_PARTICLES; ++ix) {
+    const Particle p = particles[ix];
+    
+    // Create the noise component for x, y, theta
+    const double n_x = dist_x(gen);
+    const double n_y = dist_y(gen);
+    const double n_theta = dist_theta(gen);
+    
+    // Avoid division by zero
+    if (yaw_rate < E1) {
+      // In this case the particle is moving straight
+      particles[ix].x += ds * cos(p.theta) + n_x;
+      particles[ix].y += ds * sin(p.theta) + n_y;
+      particles[ix].theta += ds + n_theta;
+    } else {
+      particles[ix].x += c1 * (sin(p.theta + arc) - sin(p.theta)) + n_x;
+      particles[ix].y += c1 * (cos(p.theta) + cos(p.theta + arc)) + n_y;
+      particles[ix].theta += arc + n_theta;
+    } // End else
+  } // End for
 }
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
