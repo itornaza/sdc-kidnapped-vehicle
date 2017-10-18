@@ -1,9 +1,9 @@
-/*
- *  particle_filter.cpp
+/**
+ * particle_filter.cpp
  *
- *  Created on: Dec 12, 2016
- *  Author: Tiffany Huang
- *  Modified: Ioannis Tornazakis
+ * Created on: Dec 12, 2016
+ * Author: Tiffany Huang
+ * Modified: Ioannis Tornazakis
  */
 
 #include "particle_filter.h"
@@ -19,14 +19,55 @@
 
 using namespace std;
 
-void ParticleFilter::init(double x, double y, double theta, double std[]) {
-	// TODO: Set the number of particles. Initialize all particles to first
-  // position (based on estimates of x, y, theta and their uncertainties from
-  // GPS) and all weights to 1. Add random Gaussian noise to each particle.
-  
-	// NOTE: Consult particle_filter.h for more information about this method
-  // (and others in this file).
+// Define constants
+#define STD_X 0
+#define STD_Y 1
+#define STD_THETA 2
+#define NUM_PARTICLES 100
+#define INIT_WEIGHT 1
 
+// Globals
+const bool DEBUG = true;
+
+/**
+ * init Initializes all particles to the first position (based on estimates of
+ * x, y, theta and their uncertainties from GPS). Sets all weights to 1 and
+ * adds random Gaussian noise to each particle
+ */
+void ParticleFilter::init(double x, double y, double theta, double std[]) {
+  // Create a random engine to pick samples from
+  default_random_engine gen;
+  
+  // Set the filter's number of particles
+  num_particles = NUM_PARTICLES;
+  
+  // Create a normal Gaussian distributions for x, y, and theta
+  normal_distribution<double> dist_x(x, std[STD_X]);
+  normal_distribution<double> dist_y(y, std[STD_Y]);
+  normal_distribution<double> dist_theta(theta, std[STD_THETA]);
+  
+  // Initialize the particles
+  for (int ix = 0; ix < NUM_PARTICLES; ++ix) {
+    Particle p;
+    
+    // Initialize each of the particles
+    p.id = ix;
+    p.x = dist_x(gen);
+    p.y = dist_y(gen);
+    p.theta = dist_theta(gen);
+    p.weight = INIT_WEIGHT;
+    
+    // Add the particle to the filter's particles vector
+    particles.push_back(p);
+  }
+  
+  // Update the initialization flag
+  is_initialized = true;
+  
+  if (DEBUG) {
+    cout << "> Initialized " << particles.size() << " particles" << endl;
+  }
+  
 }
 
 void ParticleFilter::prediction(double delta_t, double std_pos[],
