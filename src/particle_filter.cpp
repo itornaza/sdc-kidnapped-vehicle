@@ -27,12 +27,8 @@ using namespace std;
 #define INIT_WEIGHT 1
 #define E1 0.0001
 
-//----------
 // Globals
-//----------
 const bool DEBUG = true;
-
-// Create a random engine to pick samples
 default_random_engine gen;
 
 /**
