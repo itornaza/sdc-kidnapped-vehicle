@@ -129,6 +129,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
         // Set the observations id to the closest prediction yet
         observations[ix].id = predicted[iy].id;
       } // End if
+      
     } // End inner for
   } // End outer for
 }
@@ -141,6 +142,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     
     // Local vectors
     vector<LandmarkObs> observations_map;
+    vector<LandmarkObs> landmarks_visible;
     
     // For each observation transform the coordinates from vehicle to map
     for (int iy = 0; iy < observations.size(); ++iy) {
@@ -151,13 +153,32 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       LandmarkObs observation_map;
       observation_map.x = p.x + obs.x * cos(p.theta) - obs.y * sin(p.theta);
       observation_map.y = p.y + obs.x * sin(p.theta) + obs.y * cos(p.theta);
+      observation_map.id = obs.id;
       observations_map.push_back(observation_map);
       
     } // End observations inner for
     
     // Locate the landmarks within the sensor range
+    for (int iz = 0; iz < map_landmarks.landmark_list.size(); ++iz) {
+      single_landmark_s lm = map_landmarks.landmark_list[iz];
+      
+      // Get the coordinates of the particle
+      double x1 = p.x;
+      double y1 = p.y;
+      
+      // Get the coordinates of the landmark
+      double x2 = lm.x_f;
+      double y2 = lm.y_f;
+      
+      // Compare the distance of the landmark and the sensor range
+      if (dist(x1, y1, x2, y2) < sensor_range) {
+        landmarks_visible.push_back(lm);
+      } // End if
+      
+    } // End map landmarks for
     
     // Associate landmark in range (id) to landmark observations
+    
     
     // Update the weights of each particle using a mult-variate Gaussian
     // distribution. You can read more about this distribution here:
