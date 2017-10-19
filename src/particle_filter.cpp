@@ -137,22 +137,25 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
   // For all the particles
   for (int ix = 0; ix < particles.size(); ++ix) {
-  
+    Particle p = particles[ix];
+    
+    // Local vectors
+    vector<LandmarkObs> observations_map;
+    
     // For each observation transform the coordinates from vehicle to map
     for (int iy = 0; iy < observations.size(); ++iy) {
       LandmarkObs obs = observations[iy];
-      Particle p = particles[ix];
      
       // Treansform coordinates using formula 3.33 from
       // http://planning.cs.uiuc.edu/node99.html
-      obs.x = p.x + obs.x * cos(p.theta) - obs.y * sin(p.theta);
-      obs.y = p.y + obs.x * sin(p.theta) + obs.y * cos(p.theta);
+      LandmarkObs observation_map;
+      observation_map.x = p.x + obs.x * cos(p.theta) - obs.y * sin(p.theta);
+      observation_map.y = p.y + obs.x * sin(p.theta) + obs.y * cos(p.theta);
+      observations_map.push_back(observation_map);
       
     } // End observations inner for
     
     // Locate the landmarks within the sensor range
-    
-    
     
     // Associate landmark in range (id) to landmark observations
     
