@@ -16,6 +16,7 @@
 #include <sstream>
 #include <string>
 #include <iterator>
+#include "helper_functions.h"
 
 using namespace std;
 
@@ -65,13 +66,11 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   
   if (DEBUG) {
     cout << "> Initialized " << particles.size() << " particles" << endl;
-  }
-  
+  } // End if
 }
 
 /**
  * prediction Adds measurements to each particle and add random Gaussian noise
- *
  */
 void ParticleFilter::prediction(double delta_t, double std_pos[],
                                 double velocity, double yaw_rate) {
@@ -104,20 +103,49 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
       particles[ix].x += c1 * (sin(p.theta + arc) - sin(p.theta)) + n_x;
       particles[ix].y += c1 * (cos(p.theta) + cos(p.theta + arc)) + n_y;
       particles[ix].theta += arc + n_theta;
-    } // End else
+    } // End if else
   } // End for
 }
 
+/**
+ * dataAssociation finds the predicted measurement that is closest to each
+ * observed measurement and assigns the observed measurement to this particular
+ * landmark
+ * NOTE: this method is NOT called by the grading code. It is used as a helper
+ * during the updateWeights phase.
+ */
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
                                      std::vector<LandmarkObs>& observations) {
-	// TODO: Find the predicted measurement that is closest to each observed
-  // measurement and assign the observed measurement to this particular
-  // landmark.
-	
-  // NOTE: this method will NOT be called by the grading code. But you will
-  // probably find it useful to implement this method and use it as a helper
-  // during the updateWeights phase.
-
+	double min_distance = numeric_limits<double>::max()
+  
+  // For each observed measurement
+  for (int ix = 0; ix < observations.size(); ++ix) {
+    double current_distance = min_distance;
+    
+    // Scan through all the predicted measurements
+    for (int iy = 0; iy < predicted.size(); ++iy) {
+      // Get the coordinates of the observed measurement
+      double x1 = observations[ix].x;
+      double y1 = observations[ix].y
+      
+      // Get the coordinates of the predicted measurement
+      double x2 = predicted[iy].x;
+      double y2 = predicted.[iy].y;
+      
+      // Compare the distance of the observed and the predicted measurements
+      current_distance = dist(x1, y1, x2, y2);
+      
+      // Set the observation id to the nearest predicted landmark id
+      if (current_distance < min_distance) {
+        // Set the minimum distance to the new minimum
+        min_distance = current_distance;
+        
+        // Set the observations id to the new
+        observations[ix].id = predicted[iy].id;
+      } // End if
+    } // End inner for
+  } // End outer for
+  
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
@@ -133,7 +161,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 	// The following is a good resource for the theory:
 	// https://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
 	// and the following is a good resource for the actual equation to implement
-  // (look at equation 3.33
+  // (look at equation 3.33)
 	// http://planning.cs.uiuc.edu/node99.html
 }
 
