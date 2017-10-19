@@ -136,6 +136,7 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
+  
   // For all the particles
   for (int ix = 0; ix < particles.size(); ++ix) {
     Particle p = particles[ix];
@@ -160,30 +161,30 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     
     // Locate the landmarks within the sensor range
     for (int iz = 0; iz < map_landmarks.landmark_list.size(); ++iz) {
-      single_landmark_s lm = map_landmarks.landmark_list[iz];
       
       // Get the coordinates of the particle
       double x1 = p.x;
       double y1 = p.y;
       
       // Get the coordinates of the landmark
-      double x2 = lm.x_f;
-      double y2 = lm.y_f;
+      double x2 = map_landmarks.landmark_list[iz].x_f;
+      double y2 = map_landmarks.landmark_list[iz].y_f;
       
-      // Compare the distance of the landmark and the sensor range
+      // If the landmark is within sensor range, keep it
       if (dist(x1, y1, x2, y2) < sensor_range) {
-        landmarks_visible.push_back(lm);
+        landmarks_visible.push_back(map_landmarks.landmark_list[iz]);
       } // End if
       
     } // End map landmarks for
     
     // Associate landmark in range (id) to landmark observations
-    
+    dataAssociation(landmarks_visible, observations_map);
     
     // Update the weights of each particle using a mult-variate Gaussian
     // distribution. You can read more about this distribution here:
     // https://en.wikipedia.org/wiki/Multivariate_normal_distribution
-      
+    
+    
   } // End outer for
   
   // Particles already in map coordinates
