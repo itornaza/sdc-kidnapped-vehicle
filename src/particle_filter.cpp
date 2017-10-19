@@ -136,16 +136,16 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
-  
   // For all the particles
   for (int ix = 0; ix < particles.size(); ++ix) {
+    particles[ix].weight = INIT_WEIGHT;
     Particle p = particles[ix];
     
-    // Local vectors
-    vector<LandmarkObs> observations_map;
-    vector<LandmarkObs> landmarks_visible;
+    //*************************************************************************
+    // 1. Observation coordinates transformation from vehicle to map
+    //*************************************************************************
     
-    // For each observation transform the coordinates from vehicle to map
+    vector<LandmarkObs> observations_map;
     for (int iy = 0; iy < observations.size(); ++iy) {
       LandmarkObs obs = observations[iy];
      
@@ -157,38 +157,74 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       observation_map.id = obs.id;
       observations_map.push_back(observation_map);
       
-    } // End observations inner for
+    } // End inner for - observations
     
-    // Locate the landmarks within the sensor range
+    //*************************************************************************
+    // 2. Locate landmarks within sensor range
+    //*************************************************************************
+    
+    vector<LandmarkObs> landmarks_within_range;
     for (int iz = 0; iz < map_landmarks.landmark_list.size(); ++iz) {
+      // Map landmark to get information
+      Map::single_landmark_s map_landmark = map_landmarks.landmark_list[iz];
+      
+      // Observation landmark to append to the landmarks within sensor range
+      LandmarkObs obs_landmark;
       
       // Get the coordinates of the particle
       double x1 = p.x;
       double y1 = p.y;
       
       // Get the coordinates of the landmark
-      double x2 = map_landmarks.landmark_list[iz].x_f;
-      double y2 = map_landmarks.landmark_list[iz].y_f;
+      int id = map_landmark.id_i;
+      double x2 = map_landmark.x_f;
+      double y2 = map_landmark.y_f;
       
-      // If the landmark is within sensor range, keep it
+      // If the landmark is within sensor range, keep it in the list
       if (dist(x1, y1, x2, y2) < sensor_range) {
-        landmarks_visible.push_back(map_landmarks.landmark_list[iz]);
+        // Create a LandmarkObs from the single_landmark_s members
+        LandmarkObs obs_landmark = {id, x2, y2};
+        landmarks_within_range.push_back(obs_landmark);
       } // End if
       
-    } // End map landmarks for
+    } // End inner for - map landmarks
     
-    // Associate landmark in range (id) to landmark observations
-    dataAssociation(landmarks_visible, observations_map);
+    //*************************************************************************
+    // 3. Associate landmark in range (id) to landmark observations
+    //*************************************************************************
     
-    // Update the weights of each particle using a mult-variate Gaussian
-    // distribution. You can read more about this distribution here:
-    // https://en.wikipedia.org/wiki/Multivariate_normal_distribution
+    dataAssociation(landmarks_within_range, observations_map);
     
+    //*************************************************************************
+    // 4. Update the weights
+    //*************************************************************************
+    
+    // Using the mult-variate Gaussian distribution:
+    //
+    //                1              (x - μχ)^2   (y - μy)^2
+    //  P(x,y) = ------------ * e^-( ---------- + ---------- )
+    //           2π * σx * σy         2 * σx^2     2 * σy^2
+    //
+    
+    double current_weight = 0;
+    double sx = std_landmark[STD_X];
+    double sy = std_landmark[STD_Y];
+    double f1 = 1.0 / (2.0 * M_PI * sx * sy);
+    double dx = 2.0 * pow(sx, 2);
+    double dy = 2.0 * pow(sy, 2);
+    
+    for (int ik = 0; ik < observations_map.size(); ++ik) {
+      double x = observations_map[ik].x;
+      double y = observations_map[ik].y;
+      double mu_x = landmarks_within_range[ observations_map[ik].id ].x;
+      double mu_y = landmarks_within_range[ observations_map[ik].id ].y;
+      current_weight = f1*exp(-((pow(x-mu_x,2)/dx)+((pow(y-mu_y,2)/dy))));
+    } // End inner for - update weights
+    
+    particles[ix].weight *= current_weight;
+    weights.push_back(current_weight);
     
   } // End outer for
-  
-  // Particles already in map coordinates
-  
 }
 
 void ParticleFilter::resample() {
@@ -198,6 +234,7 @@ void ParticleFilter::resample() {
 	// NOTE: You may find std::discrete_distribution helpful here.
 	// http://en.cppreference.com/w/cpp/numeric/random/discrete_distribution
 
+  
 }
 
 Particle ParticleFilter::SetAssociations(Particle particle,
