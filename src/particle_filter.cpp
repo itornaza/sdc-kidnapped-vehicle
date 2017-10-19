@@ -32,11 +32,6 @@ using namespace std;
 const bool DEBUG = true;
 default_random_engine gen;
 
-/**
- * init Initializes all particles to the first position (based on estimates of
- * x, y, theta and their uncertainties from GPS). Sets all weights to 1 and
- * adds random Gaussian noise to each particle
- */
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
   // Set the filter's number of particles
   num_particles = NUM_PARTICLES;
@@ -69,9 +64,6 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   } // End if
 }
 
-/**
- * prediction Adds measurements to each particle and add random Gaussian noise
- */
 void ParticleFilter::prediction(double delta_t, double std_pos[],
                                 double velocity, double yaw_rate) {
   const double dt = delta_t;
@@ -107,30 +99,24 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
   } // End for
 }
 
-/**
- * dataAssociation finds the predicted measurement that is closest to each
- * observed measurement and assigns the observed measurement to this particular
- * landmark
- * NOTE: this method is NOT called by the grading code. It is used as a helper
- * during the updateWeights phase.
- */
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
                                      std::vector<LandmarkObs>& observations) {
-	double min_distance = numeric_limits<double>::max()
+  double min_distance = numeric_limits<double>::max();
   
   // For each observed measurement
   for (int ix = 0; ix < observations.size(); ++ix) {
+    // Reset the current distance for each itteration
     double current_distance = min_distance;
     
     // Scan through all the predicted measurements
     for (int iy = 0; iy < predicted.size(); ++iy) {
       // Get the coordinates of the observed measurement
       double x1 = observations[ix].x;
-      double y1 = observations[ix].y
+      double y1 = observations[ix].y;
       
       // Get the coordinates of the predicted measurement
       double x2 = predicted[iy].x;
-      double y2 = predicted.[iy].y;
+      double y2 = predicted[iy].y;
       
       // Compare the distance of the observed and the predicted measurements
       current_distance = dist(x1, y1, x2, y2);
@@ -140,29 +126,44 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
         // Set the minimum distance to the new minimum
         min_distance = current_distance;
         
-        // Set the observations id to the new
+        // Set the observations id to the closest prediction yet
         observations[ix].id = predicted[iy].id;
       } // End if
     } // End inner for
   } // End outer for
-  
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
-	// TODO: Update the weights of each particle using a mult-variate Gaussian
-  // distribution. You can read more about this distribution here:
-  // https://en.wikipedia.org/wiki/Multivariate_normal_distribution
-	
-  // NOTE: The observations are given in the VEHICLE'S coordinate system.
-  // Your particles are located according to the MAP'S coordinate system. You
-  // will need to transform between the two systems. Keep in mind that this
-  // transformation requires both rotation AND translation (but no scaling).
-	// The following is a good resource for the theory:
-	// https://www.willamette.edu/~gorr/classes/GeneralGraphics/Transforms/transforms2d.htm
-	// and the following is a good resource for the actual equation to implement
-  // (look at equation 3.33)
-	// http://planning.cs.uiuc.edu/node99.html
+  // For all the particles
+  for (int ix = 0; ix < particles.size(); ++ix) {
+  
+    // For each observation transform the coordinates from vehicle to map
+    for (int iy = 0; iy < observations.size(); ++iy) {
+      LandmarkObs obs = observations[iy];
+      Particle p = particles[ix];
+     
+      // Treansform coordinates using formula 3.33 from
+      // http://planning.cs.uiuc.edu/node99.html
+      obs.x = p.x + obs.x * cos(p.theta) - obs.y * sin(p.theta);
+      obs.y = p.y + obs.x * sin(p.theta) + obs.y * cos(p.theta);
+      
+    } // End observations inner for
+    
+    // Locate the landmarks within the sensor range
+    
+    
+    
+    // Associate landmark in range (id) to landmark observations
+    
+    // Update the weights of each particle using a mult-variate Gaussian
+    // distribution. You can read more about this distribution here:
+    // https://en.wikipedia.org/wiki/Multivariate_normal_distribution
+      
+  } // End outer for
+  
+  // Particles already in map coordinates
+  
 }
 
 void ParticleFilter::resample() {
