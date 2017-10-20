@@ -68,6 +68,7 @@ public:
    * standard deviation of y [m], standard deviation of yaw [rad]]
 	 * @param velocity Velocity of car from t to t+1 [m/s]
 	 * @param yaw_rate Yaw rate of car from t to t+1 [rad/s]
+   * Modifies the particles class attribtue
 	 */
 	void prediction(double delta_t, double std_pos[], double velocity,
                   double yaw_rate);
