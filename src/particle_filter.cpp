@@ -98,36 +98,29 @@ void ParticleFilter::prediction(double dt, double std_pos[],
 
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
                                      std::vector<LandmarkObs>& observations) {
-  double min_distance = numeric_limits<double>::max();
-  int observation_id = 0;
   
-  // For each observed measurement
+  // Scan through all observations and predicted landmarks to find the
+  // closest match
   for (int ix = 0; ix < observations.size(); ++ix) {
-    // Reset the current distance for each itteration
-    double current_distance = min_distance;
+    LandmarkObs * obs = &observations[ix];
     
-    // Scan through all the predicted measurements to get the closest landmark
+    // Reset the current distance for each itteration
+    double min_distance = numeric_limits<double>::max();
+    
     for (int iy = 0; iy < predicted.size(); ++iy) {
-      // Get the coordinates of the observed measurement
-      double x1 = observations[ix].x;
-      double y1 = observations[ix].y;
-      
-      // Get the coordinates of the predicted measurement
-      double x2 = predicted[iy].x;
-      double y2 = predicted[iy].y;
+      LandmarkObs * pred = &predicted[iy];
       
       // Compare the distance of the observed and the predicted measurements
-      current_distance = dist(x1, y1, x2, y2);
+      double current_distance = dist((*obs).x, (*obs).y,
+                                     (*pred).x, (*pred).y);
       
       // Set the observation id to the nearest predicted landmark id
-      if (current_distance < min_distance) {
+      if (min_distance > current_distance) {
         min_distance = current_distance;
-        observation_id = iy;
+        // Set the observations id to the closest prediction
+        (*obs).id = (*pred).id;
       } // End if
     } // End inner for
-    
-    // Set the observations id to the closest prediction
-    observations[ix].id = observation_id;
   } // End outer for
 }
 
