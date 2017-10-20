@@ -29,7 +29,7 @@ using namespace std;
 #define E1 0.0001
 
 // Globals
-const bool DEBUG = true;
+const bool DEBUG = false;
 default_random_engine gen;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
@@ -102,13 +102,14 @@ void ParticleFilter::prediction(double delta_t, double std_pos[],
 void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
                                      std::vector<LandmarkObs>& observations) {
   double min_distance = numeric_limits<double>::max();
+  int observation_id = 0;
   
   // For each observed measurement
   for (int ix = 0; ix < observations.size(); ++ix) {
     // Reset the current distance for each itteration
     double current_distance = min_distance;
     
-    // Scan through all the predicted measurements
+    // Scan through all the predicted measurements to get the closest landmark
     for (int iy = 0; iy < predicted.size(); ++iy) {
       // Get the coordinates of the observed measurement
       double x1 = observations[ix].x;
@@ -123,23 +124,29 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
       
       // Set the observation id to the nearest predicted landmark id
       if (current_distance < min_distance) {
-        // Set the minimum distance to the new minimum
         min_distance = current_distance;
-        
-        // Set the observations id to the closest prediction yet
-        observations[ix].id = predicted[iy].id;
+        observation_id = iy;
       } // End if
-      
     } // End inner for
+    
+    // Set the observations id to the closest prediction
+    observations[ix].id = observation_id;
   } // End outer for
 }
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
+  // Calculations that need to be done only once and used in step 4
+  double sx = std_landmark[STD_X];
+  double sy = std_landmark[STD_Y];
+  double f1 = 1.0 / (2.0 * M_PI * sx * sy);
+  double dx = 2.0 * pow(sx, 2);
+  double dy = 2.0 * pow(sy, 2);
+  
   // For all the particles
   for (int ix = 0; ix < particles.size(); ++ix) {
     particles[ix].weight = INIT_WEIGHT;
-    Particle p = particles[ix];
+    const Particle p = particles[ix];
     
     //*************************************************************************
     // 1. Observation coordinates transformation from vehicle to map
@@ -147,16 +154,14 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     
     vector<LandmarkObs> observations_map;
     for (int iy = 0; iy < observations.size(); ++iy) {
-      LandmarkObs obs = observations[iy];
-     
-      // Treansform coordinates using formula 3.33 from
-      // http://planning.cs.uiuc.edu/node99.html
+      const LandmarkObs obs = observations[iy];
       LandmarkObs observation_map;
+      
+      // Transform coordinates using formula 3.33 from:
+      // http://planning.cs.uiuc.edu/node99.html
       observation_map.x = p.x + obs.x * cos(p.theta) - obs.y * sin(p.theta);
       observation_map.y = p.y + obs.x * sin(p.theta) + obs.y * cos(p.theta);
-      observation_map.id = obs.id;
       observations_map.push_back(observation_map);
-      
     } // End inner for - observations
     
     //*************************************************************************
@@ -186,7 +191,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
         LandmarkObs obs_landmark = {id, x2, y2};
         landmarks_within_range.push_back(obs_landmark);
       } // End if
-      
     } // End inner for - map landmarks
     
     //*************************************************************************
@@ -195,35 +199,50 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     
     dataAssociation(landmarks_within_range, observations_map);
     
+    if (DEBUG) {
+      cout  << "> Observation map size = " << observations_map.size()
+            << endl;
+      cout << "-> id's = ";
+      for (int ix = 0; ix < observations_map.size(); ++ix) {
+        cout << observations_map[ix].id << " ";
+      }
+      cout << endl;
+    }
+    
+    if (DEBUG) {
+      cout  << "> Landmarks within range size = " << landmarks_within_range.size()
+            << endl;
+      cout << "-> id's = ";
+      for (int ix = 0; ix < landmarks_within_range.size(); ++ix) {
+        cout << landmarks_within_range[ix].id << " ";
+      }
+      cout << endl;
+    }
+    
     //*************************************************************************
     // 4. Update the weights
     //*************************************************************************
     
-    // Using the mult-variate Gaussian distribution:
+    // Mult-variate Gaussian distribution equation:
     //
     //                1              (x - μχ)^2   (y - μy)^2
     //  P(x,y) = ------------ * e^-( ---------- + ---------- )
     //           2π * σx * σy         2 * σx^2     2 * σy^2
     //
     
-    double current_weight = 0;
-    double sx = std_landmark[STD_X];
-    double sy = std_landmark[STD_Y];
-    double f1 = 1.0 / (2.0 * M_PI * sx * sy);
-    double dx = 2.0 * pow(sx, 2);
-    double dy = 2.0 * pow(sy, 2);
-    
     for (int ik = 0; ik < observations_map.size(); ++ik) {
       double x = observations_map[ik].x;
       double y = observations_map[ik].y;
       double mu_x = landmarks_within_range[ observations_map[ik].id ].x;
       double mu_y = landmarks_within_range[ observations_map[ik].id ].y;
-      current_weight = f1*exp(-((pow(x-mu_x,2)/dx)+((pow(y-mu_y,2)/dy))));
+      double current_weight= f1*exp(-((pow(x-mu_x,2)/dx)+((pow(y-mu_y,2)/dy))));
+      
+      // Update the weight of the particle using product
+      particles[ix].weight *= current_weight;
     } // End inner for - update weights
     
-    particles[ix].weight *= current_weight;
-    weights.push_back(current_weight);
-    
+    // Append the global weights list
+    weights.push_back(particles[ix].weight);
   } // End outer for
 }
 
