@@ -37,7 +37,7 @@ This is performed with the homogeneous transformation using the following equati
 
 The particles final weight is calculated as the product of each observations Multivariant-Gaussian probability.
 
-The weights are updated for each particle landmark observation using the following equation:
+The weights are updated for each particle using the following equation:
 
 ![alt text][image5]
 
