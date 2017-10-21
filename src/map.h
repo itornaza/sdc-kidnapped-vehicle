@@ -25,7 +25,7 @@ public:
 	};
 
   // List of landmarks in the map
-	std::vector<single_landmark_s> landmark_list ;
+	std::vector<single_landmark_s> landmark_list;
 };
 
 #endif /* MAP_H_ */
