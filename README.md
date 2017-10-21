@@ -5,6 +5,9 @@ Our self-driving car has been kidnapped and transported to a new location! Lucki
 
 This project implements a 2 dimensional particle filter in C++. The particle filter is given a map and some initial localization information (analogous to what a GPS would provide). At each time step the filter also gets observation and control data.
 
+The project's rubric can be found [here](https://review.udacity.com/#!/rubrics/747/view)
+The simulation video on [youtube](https://youtu.be/g9WeSvtYaHo)
+
 [//]: # (Image References)
 [image1]: ./images/particle_filter.png "Particle filter simulator output"
 [image2]: ./images/algorith_flowchart.png "Algorith flowchart"
