@@ -19,16 +19,20 @@ This project implements a 2 dimensional particle filter in C++. The particle fil
 The following flowchart summarizes the particle filter algorithm to achieve the vehicle's localization.
 
 ![alt text][image2]
+
 Image source: Udacity
 
 The prediction step is performed using the following equations:
-![alt text][image2]
 
-The coordinates transformation between vehicle and map coordinates is done using the following equations:
 ![alt text][image3]
 
-The weights are updated for each particle landmark observation using the following equation:
+The coordinates transformation between vehicle and map coordinates is done using the following equations:
+
 ![alt text][image4]
+
+The weights are updated for each particle landmark observation using the following equation:
+
+![alt text][image5]
 
 ## Installation
 This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
