@@ -117,9 +117,9 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
     // Reset the minimum distance for each itteration to a large number
     double min_distance = numeric_limits<double>::max();
     
-    // Compare the distance of the observed and the predicted measurements.
+    // Compare the distance of the observed and the predicted landmarks.
     // When finding a mimimum, update the observation id to the corresponding
-    // prediction
+    // landmark prediction
     for (int iy = 0; iy < predicted.size(); ++iy) {
       const LandmarkObs * pred = &predicted[iy];
       double current_distance = dist((*obs).x, (*obs).y, (*pred).x, (*pred).y);
@@ -137,18 +137,25 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
 		const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
   // For all the particles
   for (int ix = 0; ix < particles.size(); ++ix) {
-    // Create a pointer to access each particle during the loop
+    // A pointer to access each particle during the loop
     Particle * p = &particles[ix];
     
     // Make sure the weight is set to 1 for the multiplication rule during
     // the update phase to work as expected
     (*p).weight = INIT_WEIGHT;
     
+    // Holds the list of the observations for each particle transformed to
+    // map coordinates
+    vector<LandmarkObs> observations_map;
+    
+    // Holds the list of the predicted landmarks for eaach particle that are in
+    // sensor range
+    vector<LandmarkObs> predicted_within_range;
+    
     //*************************************************************************
     // 1. Observation coordinates transformation from vehicle to map
     //*************************************************************************
     
-    vector<LandmarkObs> observations_map;
     for (int iy = 0; iy < observations.size(); ++iy) {
       const LandmarkObs obs = observations[iy];
       LandmarkObs observation_map;
@@ -175,7 +182,6 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // 2. Locate landmarks within sensor range
     //*************************************************************************
     
-    vector<LandmarkObs> landmarks_within_range;
     for (int iz = 0; iz < map_landmarks.landmark_list.size(); ++iz) {
       // Map landmark to get information
       Map::single_landmark_s map_landmark = map_landmarks.landmark_list[iz];
@@ -195,7 +201,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       // If the landmark is within sensor range, keep it in the list
       if (dist(x1, y1, x2, y2) < sensor_range) {
         LandmarkObs obs_landmark = {id, x2, y2};
-        landmarks_within_range.push_back(obs_landmark);
+        predicted_within_range.push_back(obs_landmark);
       } // End if - distance
     } // End inner for - map landmarks
     
@@ -203,7 +209,10 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // 3. Associate landmark in range (id) to landmark observations
     //*************************************************************************
     
-    dataAssociation(landmarks_within_range, observations_map);
+    // Associate the observations with the closest landmark in sensor range
+    // The association happens as each observation is assigned with the id of
+    // the closest landmark
+    dataAssociation(predicted_within_range, observations_map);
     
     //*************************************************************************
     // 4. Update the weights
@@ -227,17 +236,17 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       double y = (*obs).y;
       
       // Locate the nearest landmark to the current observation
-      LandmarkObs lm;
-      for (int iv = 0; iv < landmarks_within_range.size(); iv++) {
-        if (landmarks_within_range[iv].id == (*obs).id) {
-           lm = landmarks_within_range[iv];
+      LandmarkObs nearest_landmark;
+      for (int iv = 0; iv < predicted_within_range.size(); iv++) {
+        if (predicted_within_range[iv].id == (*obs).id) {
+           nearest_landmark = predicted_within_range[iv];
         } // End if
       } // End for
       
       // (μx, μy) are the coordinates of the nearest landmark (already in map
       // coordinates) to the observation
-      double mu_x = lm.x;
-      double mu_y = lm.y;
+      double mu_x = nearest_landmark.x;
+      double mu_y = nearest_landmark.y;
       
       // Short for the standard deviations
       double sx = std_landmark[STD_X];
