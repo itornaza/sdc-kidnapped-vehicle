@@ -22,17 +22,22 @@ The following flowchart summarizes the particle filter algorithm to achieve the 
 
 Image source: Udacity
 
-The prediction step is performed using the following equations:
+The filter predicts the location of the self driving car from the velocity, yaw rate and time elapsed using the following equations:
 
 ![alt text][image3]
 
-The coordinates transformation between vehicle and map coordinates is done using the following equations:
+The observations of the self driving car sensors are taken in the vehicle's coordinate system. In order to correlate the sensors observations with the actual landmarks of the map, we have to convert the coordinates of the observations from vehicle coordinates to map coordinates.
+This is performed with the homogeneous transformation using the following equations:
 
 ![alt text][image4]
+
+The particles final weight is calculated as the product of each observations Multivariant-Gaussian probability.
 
 The weights are updated for each particle landmark observation using the following equation:
 
 ![alt text][image5]
+
+The mean of the Multivariate-Gaussian equation is the observation's associated landmark position and is evaluated at the point of the transformed observation's position.
 
 ## Installation
 This project involves the Term 2 Simulator which can be downloaded [here](https://github.com/udacity/self-driving-car-sim/releases)
