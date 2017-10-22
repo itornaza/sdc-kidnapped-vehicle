@@ -20,12 +20,13 @@
 using namespace std;
 
 // Globals
-const int STD_X = 0;
-const int STD_Y = 1;
-const int STD_THETA = 2;
+const int STD_X_IDX = 0;
+const int STD_Y_IDX = 1;
+const int STD_THETA_IDX = 2;
 const int NUM_PARTICLES = 100;
 const double INIT_WEIGHT = 1.0;
 const double E1 = 0.0001;
+const int SENTINEL = -1;
 default_random_engine gen;
 
 void ParticleFilter::init(double x, double y, double theta, double std[]) {
@@ -33,9 +34,9 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
   num_particles = NUM_PARTICLES;
   
   // Create normal Gaussian distributions for x, y, and theta
-  normal_distribution<double> dist_x(x, std[STD_X]);
-  normal_distribution<double> dist_y(y, std[STD_Y]);
-  normal_distribution<double> dist_theta(theta, std[STD_THETA]);
+  normal_distribution<double> dist_x(x, std[STD_X_IDX]);
+  normal_distribution<double> dist_y(y, std[STD_Y_IDX]);
+  normal_distribution<double> dist_theta(theta, std[STD_THETA_IDX]);
   
   // Initialize the particles with the default attributes and add them to
   // the list of particles
@@ -56,9 +57,9 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
 void ParticleFilter::prediction(double dt, double std_pos[], double v,
                                 double yaw_rate) {
   // Create a normal Gaussian distributions for noise in x, y, theta
-  normal_distribution<double> dist_x(0.0, std_pos[STD_X]);
-  normal_distribution<double> dist_y(0.0, std_pos[STD_Y]);
-  normal_distribution<double> dist_theta(0.0, std_pos[STD_THETA]);
+  normal_distribution<double> dist_x(0.0, std_pos[STD_X_IDX]);
+  normal_distribution<double> dist_y(0.0, std_pos[STD_Y_IDX]);
+  normal_distribution<double> dist_theta(0.0, std_pos[STD_THETA_IDX]);
   
   // Predict the future pose of the particles
   for (int ix = 0; ix < particles.size(); ++ix) {
@@ -135,6 +136,13 @@ void ParticleFilter::dataAssociation(std::vector<LandmarkObs> predicted,
 
 void ParticleFilter::updateWeights(double sensor_range, double std_landmark[], 
 		const std::vector<LandmarkObs> &observations, const Map &map_landmarks) {
+  // Calculations for the weights that do not need to be repeated
+  double sx = std_landmark[STD_X_IDX];
+  double sy = std_landmark[STD_Y_IDX];
+  double c1 = 1.0 / (2.0 * M_PI * sx * sy);
+  double c2 = 2.0 * pow(sx, 2);
+  double c3 = 2.0 * pow(sy, 2);
+  
   // For all the particles
   for (int ix = 0; ix < particles.size(); ++ix) {
     // A pointer to access each particle during the loop
@@ -229,6 +237,9 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     //--------------------------------------------------------------------------
     
     for (int ik = 0; ik < observations_map.size(); ++ik) {
+      // Holds the calculated weight for each observation
+      double w = 0;
+      
       // (x, y) are the coordinates of the observations transformed to map
       // coordinates
       const LandmarkObs * obs = &observations_map[ik];
@@ -237,29 +248,32 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       
       // Locate the nearest landmark to the current observation
       LandmarkObs nearest_landmark;
+      nearest_landmark.id = SENTINEL;
       for (int iv = 0; iv < predicted_within_range.size(); iv++) {
         if (predicted_within_range[iv].id == (*obs).id) {
            nearest_landmark = predicted_within_range[iv];
         } // End if
       } // End for
       
-      // (μx, μy) are the coordinates of the nearest landmark (already in map
-      // coordinates) to the observation
-      double mu_x = nearest_landmark.x;
-      double mu_y = nearest_landmark.y;
-      
-      // Short for the standard deviations
-      double sx = std_landmark[STD_X];
-      double sy = std_landmark[STD_Y];
-      
-      // Implement the multivariate Gaussian equation (7)
-      double c1 = (1.0 / (2.0 * M_PI * sx * sy));
-      double x_fract = pow(x - mu_x, 2.0) / (2.0 * pow(sx, 2));
-      double y_fract = pow(y - mu_y, 2.0) / (2.0 * pow(sy, 2));
-      double w = c1 * exp(-(x_fract + y_fract));
+      if (nearest_landmark.id == SENTINEL) {
+        w = 0;
+      } else {
+        // (μx, μy) are the coordinates of the nearest landmark (already in map
+        // coordinates) to the observation
+        double mu_x = nearest_landmark.x;
+        double mu_y = nearest_landmark.y;
+        
+        // Implement the multivariate Gaussian equation (7)
+        // Note that c1, c2, c3 are defined at the begining of this method
+        // and they are independent of the particle and observation
+        double x_fract = pow(x - mu_x, 2.0) / c2;
+        double y_fract = pow(y - mu_y, 2.0) / c3;
+        w = c1 * exp(-(x_fract + y_fract));
+      }
       
       // Multiply each weight to get the particle's total weight
       (*p).weight *= w;
+      
     } // End inner for - update weights
     
     // Append to the all inclusive weights list
