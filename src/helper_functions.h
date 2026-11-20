@@ -4,7 +4,7 @@
  * Some helper functions for the 2D particle filter.
  * Created on: Dec 13, 2016
  * Author: Tiffany Huang
- * Modified: Ioannis Tornazakis
+ * Modified: ion-
  */
 
 #ifndef HELPER_FUNCTIONS_H_

@@ -3,7 +3,7 @@
  *
  *  Created on: Dec 12, 2016
  *  Author: mufferm
- *  Modified: Ioannis Tornazakis
+ *  Modified: ion-
  */
 
 #ifndef MAP_H_

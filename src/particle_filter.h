@@ -4,7 +4,7 @@
  *  2D particle filter class.
  *  Created on: Dec 12, 2016
  *  Author: Tiffany Huang
- *  Modified: Ioannis Tornazakis
+ *  Modified: ion-
  */
 
 #ifndef PARTICLE_FILTER_H_
